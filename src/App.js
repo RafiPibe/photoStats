@@ -1056,7 +1056,6 @@ function App() {
   const handleReset = () => {
     setForm(autoForm);
   };
-
   const handleDownload = () => {
     if (!canvasRef.current) {
       return;
@@ -1065,30 +1064,54 @@ function App() {
     const safeName = fileName ? fileName.replace(/\.[^/.]+$/, '') : 'photo';
     const downloadFileName = `${safeName}-photostats.png`;
 
-    // Try blob method first (better mobile support)
-    canvasRef.current.toBlob((blob) => {
-      if (blob) {
-        // Create blob URL
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.download = downloadFileName;
-        link.href = url;
+    // Detect if we're on iOS Safari
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
-        // Trigger download
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-
-        // Clean up blob URL
-        setTimeout(() => URL.revokeObjectURL(url), 100);
-      } else {
-        // Fallback to data URL method
-        const link = document.createElement('a');
-        link.download = downloadFileName;
-        link.href = canvasRef.current.toDataURL('image/png');
-        link.click();
+    if (isIOS || isSafari) {
+      // For iOS/Safari: Open image in new tab for user to save manually
+      const dataURL = canvasRef.current.toDataURL('image/png');
+      const newWindow = window.open();
+      if (newWindow) {
+        newWindow.document.write(`
+          <html>
+            <head>
+              <title>${downloadFileName}</title>
+              <meta name="viewport" content="width=device-width, initial-scale=1">
+              <style>
+                body { margin: 0; padding: 20px; background: #000; display: flex; flex-direction: column; align-items: center; }
+                img { max-width: 100%; height: auto; }
+                p { color: #fff; font-family: system-ui; text-align: center; margin-bottom: 20px; }
+              </style>
+            </head>
+            <body>
+              <p>Long press the image below and select "Save Image" or "Add to Photos"</p>
+              <img src="${dataURL}" alt="${downloadFileName}" />
+            </body>
+          </html>
+        `);
       }
-    }, 'image/png');
+    } else {
+      // For desktop and Android: Use blob download
+      canvasRef.current.toBlob((blob) => {
+        if (blob) {
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.download = downloadFileName;
+          link.href = url;
+          link.style.display = 'none';
+
+          document.body.appendChild(link);
+          link.click();
+
+          // Cleanup
+          setTimeout(() => {
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+          }, 100);
+        }
+      }, 'image/png');
+    }
   };
 
   return (
