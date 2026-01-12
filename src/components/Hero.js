@@ -98,12 +98,6 @@ export default function Hero() {
                     >
                         Get Started
                     </a>
-                    <a
-                        href="#features"
-                        className="inline-flex items-center justify-center px-8 py-3 rounded-full bg-white text-dark font-semibold border border-cream-300 hover:border-cream-400 transition-colors duration-200"
-                    >
-                        Learn More
-                    </a>
                 </motion.div>
             </div>
         </section>

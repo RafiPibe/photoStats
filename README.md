@@ -1,70 +1,141 @@
-# Getting Started with Create React App
+# PhotoStats
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Made with ❤️ for photographers (Including me)
 
-## Available Scripts
+**Beautiful EXIF Data Overlays for Your Photos**
 
-In the project directory, you can run:
+The main reason on why I made this is I can't find that photo metadata thing that people usually use for their photos. Hence I said to myself, hey what about I make it myself, and share it to others that is also in pain of searching it (lmao).
 
-### `npm start`
+PhotoStats is a web application that automatically extracts EXIF metadata from your photos and creates visual overlays with camera, lens, and shooting information. Perfect for those who want to share their work with their technical details of camera and settings.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+![PhotoStats Hero](https://via.placeholder.com/1200x600/f6f1ea/1b1712?text=PhotoStats)
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Features
 
-### `npm test`
+- **Automatic EXIF Extraction** - Upload any photo and instantly extract camera settings
+- **Clean Overlays** - Clean, professional design with camera branding (Can do custom too)
+- **Complete Metadata** - Camera name, lens, aperture, shutter speed, focal length, and ISO
+- **Multiple Formats** - Supports JPG, PNG, RAW files (ARW, DNG, NEF, CR2, CR3, ORF, RAF, RW2, PEF), and HEIC
+- **Brand Logos** - Automatic logo detection for major camera brands (Sony, Canon, Nikon, Fujifilm, Leica, and more)
+- **In-Browser Processing** - All processing happens locally - your photos never leave your device
+- **Responsive Design** - Works on desktop, tablet, and mobile
+- **Portrait & Landscape** - Support for both orientations
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Quick Start
 
-### `npm run build`
+### Prerequisites
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+- Node.js 14+ and npm
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Installation
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```bash
+# Clone the repository
+git clone https://github.com/rafipibe/photostats.git
 
-### `npm run eject`
+# Navigate to the project directory
+cd photostats
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+# Install dependencies
+npm install
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+# Start the development server
+npm start
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+The app will open at [http://localhost:3000](http://localhost:3000)
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## Usage
 
-## Learn More
+1. **Upload a Photo** - Click "Choose a Photo" or drag and drop your image
+2. **Review EXIF Data** - The app automatically extracts and displays camera settings
+3. **Edit if Needed** - Manually adjust any fields that weren't detected correctly
+4. **Choose Orientation** - Select portrait or landscape layout
+5. **Download** - Click "Download PNG" to save your image with the EXIF overlay
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## Supported Camera Brands
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+PhotoStats includes logo assets for the following brands:
 
-### Code Splitting
+- 7Artisans
+- Apple
+- Canon
+- DJI
+- Fujifilm
+- Google
+- GoPro
+- Hasselblad
+- Huawei
+- Laowa
+- Leica
+- Lumix (Panasonic)
+- Minolta
+- Nikon
+- Olympus
+- Pentax
+- Ricoh
+- Samsung
+- Samyang
+- Sigma
+- Sony
+- Tamron
+- TTArtisan
+- Zeiss
+- Xiaomi
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## Project Structure
 
-### Analyzing the Bundle Size
+```
+photostats/
+├── public/
+│   ├── logos/          # Camera brand logos (SVG/PNG)
+│   └── index.html
+├── src/
+│   ├── utils/
+│   │   └── exif.js     # EXIF parsing utilities
+│   ├── App.js          # Main application component
+│   ├── App.css         # Application styles
+│   └── index.js        # Entry point
+└── package.json
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## Built With
 
-### Making a Progressive Web App
+- **React** - UI framework
+- **exifr** - EXIF metadata extraction
+- **libraw-wasm** - RAW file processing in the browser
+- **Plus Jakarta Sans** - Typography
+- **Canvas API** - Image rendering and overlay generation
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+## Adding Custom Logos
 
-### Advanced Configuration
+To add a new camera brand logo:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+1. Add your logo file (SVG or PNG) to `public/logos/`
+2. Update the `BRAND_LOGOS` object in `src/App.js`:
 
-### Deployment
+```javascript
+const BRAND_LOGOS = {
+  // ... existing logos
+  'YourBrand': '/logos/YourBrand.svg',
+};
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+3. Add the brand to `BRAND_MATCHERS` for auto-detection:
 
-### `npm run build` fails to minify
+```javascript
+const BRAND_MATCHERS = [
+  // ... existing matchers
+  { pattern: /yourbrand/i, label: 'YourBrand' },
+];
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- Camera brand logos are property of their respective owners
+- EXIF parsing powered by [exifr](https://github.com/MikeKovarik/exifr)
+- RAW file support via [libraw-wasm](https://github.com/WiseLibs/libraw-wasm)
