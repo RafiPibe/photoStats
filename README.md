@@ -2,7 +2,7 @@
 
 Made with ❤️ for photographers (Including me)
 
-**Beautiful EXIF Data Overlays for Your Photos**
+**Technical EXIF Data Overlays for Your Photos**
 
 The main reason on why I made this is I can't find that photo metadata thing that people usually use for their photos. Hence I said to myself, hey what about I make it myself, and share it to others that is also in pain of searching it (lmao).
 

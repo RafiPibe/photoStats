@@ -66,7 +66,7 @@ export default function Hero() {
                     transition={{ duration: 0.6, ease: [0, 0, 0.2, 1] }}
                 >
                     <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-bold text-dark mb-6 tracking-tight">
-                        Beautiful EXIF Data
+                        Technical EXIF Data
                         <br />
                         <span className="text-dark-100">for Your Photos</span>
                     </h1>
