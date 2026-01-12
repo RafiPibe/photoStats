@@ -8,7 +8,7 @@ The main reason on why I made this is I can't find that photo metadata thing tha
 
 PhotoStats is a web application that automatically extracts EXIF metadata from your photos and creates visual overlays with camera, lens, and shooting information. Perfect for those who want to share their work with their technical details of camera and settings.
 
-![PhotoStats Hero](https://via.placeholder.com/1200x600/f6f1ea/1b1712?text=PhotoStats)
+![PhotoStats Hero](/src/Hero.png)
 
 ## Features
 
