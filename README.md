@@ -10,6 +10,10 @@ PhotoStats is a web application that automatically extracts EXIF metadata from y
 
 ![PhotoStats Hero](/src/Hero.png)
 
+## Example Image Result
+![PhotoStats Example](/src/example.png)
+*image is compressed for this example but it supports full coverage of the uploaded image*
+
 ## Features
 
 - **Automatic EXIF Extraction** - Upload any photo and instantly extract camera settings

@@ -1056,16 +1056,62 @@ function App() {
   const handleReset = () => {
     setForm(autoForm);
   };
-
   const handleDownload = () => {
     if (!canvasRef.current) {
       return;
     }
-    const link = document.createElement('a');
+
     const safeName = fileName ? fileName.replace(/\.[^/.]+$/, '') : 'photo';
-    link.download = `${safeName}-photostats.png`;
-    link.href = canvasRef.current.toDataURL('image/png');
-    link.click();
+    const downloadFileName = `${safeName}-photostats.png`;
+
+    // Detect if we're on iOS Safari
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
+    if (isIOS || isSafari) {
+      // For iOS/Safari: Open image in new tab for user to save manually
+      const dataURL = canvasRef.current.toDataURL('image/png');
+      const newWindow = window.open();
+      if (newWindow) {
+        newWindow.document.write(`
+          <html>
+            <head>
+              <title>${downloadFileName}</title>
+              <meta name="viewport" content="width=device-width, initial-scale=1">
+              <style>
+                body { margin: 0; padding: 20px; background: #000; display: flex; flex-direction: column; align-items: center; }
+                img { max-width: 100%; height: auto; }
+                p { color: #fff; font-family: system-ui; text-align: center; margin-bottom: 20px; }
+              </style>
+            </head>
+            <body>
+              <p>Long press the image below and select "Save Image" or "Add to Photos"</p>
+              <img src="${dataURL}" alt="${downloadFileName}" />
+            </body>
+          </html>
+        `);
+      }
+    } else {
+      // For desktop and Android: Use blob download
+      canvasRef.current.toBlob((blob) => {
+        if (blob) {
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.download = downloadFileName;
+          link.href = url;
+          link.style.display = 'none';
+
+          document.body.appendChild(link);
+          link.click();
+
+          // Cleanup
+          setTimeout(() => {
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+          }, 100);
+        }
+      }, 'image/png');
+    }
   };
 
   return (
@@ -1151,6 +1197,8 @@ function App() {
               canvasRef={canvasRef}
               imageUrl={imageUrl}
               layout={layout}
+              onDownload={handleDownload}
+              fileName={fileName}
             />
           </div>
         </div>
