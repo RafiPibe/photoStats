@@ -6,6 +6,7 @@ import Hero from './components/Hero';
 import FileUpload from './components/FileUpload';
 import PhotoForm from './components/PhotoForm';
 import Preview from './components/Preview';
+import Footer from './components/Footer';
 
 const DEFAULT_FORM = {
   cameraName: '',
@@ -1154,6 +1155,8 @@ function App() {
           </div>
         </div>
       </main>
+
+      <Footer />
     </>
   );
 }
