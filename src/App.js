@@ -1,5 +1,7 @@
 import './App.css';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import * as exifr from 'exifr';
+import LibRaw from 'libraw-wasm';
 import { normalizeString, parseExif, toNumber } from './utils/exif';
 
 const DEFAULT_FORM = {
@@ -23,7 +25,7 @@ const BRAND_MATCHERS = [
   { pattern: /fujifilm|fuji/i, label: 'Fujifilm' },
   { pattern: /leica/i, label: 'Leica' },
   { pattern: /panasonic|lumix/i, label: 'Lumix' },
-  { pattern: /sigma/i, label: 'Sigma' },
+  { pattern: /DG|DN|ART|sigma/i, label: 'Sigma' },
   { pattern: /zeiss/i, label: 'Zeiss' },
   { pattern: /olympus|om system|omds/i, label: 'Olympus' },
   { pattern: /pentax/i, label: 'Pentax' },
@@ -31,6 +33,16 @@ const BRAND_MATCHERS = [
   { pattern: /hasselblad/i, label: 'Hasselblad' },
   { pattern: /dji/i, label: 'DJI' },
   { pattern: /gopro/i, label: 'GoPro' },
+  { pattern: /google|pixel/i, label: 'Google' },
+  { pattern: /samsung|galaxy/i, label: 'Samsung' },
+  { pattern: /xiaomi/i, label: 'Xiaomi' },
+  { pattern: /huawei/i, label: 'Huawei' },
+  { pattern: /minolta/i, label: 'Minolta' },
+  { pattern: /tamron/i, label: 'Tamron' },
+  { pattern: /laowa/i, label: 'Laowa' },
+  { pattern: /samyang/i, label: 'Samyang' },
+  { pattern: /ttartisan/i, label: 'TTArtisan' },
+  { pattern: /7artisans?/i, label: '7Artisans' },
 ];
 
 const FONT_FAMILY = '"Plus Jakarta Sans", sans-serif';
@@ -42,17 +54,70 @@ const BRAND_OPTIONS = Array.from(
 const LOGO_SCALES = {
   Apple: 1.45,
   Leica: 1.4,
+  Minolta: 1.3,
+  Nikon: 1.3,
   Zeiss: 1.35,
+  Xiaomi: 1.3,
 };
 const BRAND_LOGOS = {
+  '7Artisans': '/logos/7artisans.svg',
   Apple: '/logos/Apple.svg',
+  Canon: '/logos/Canon.svg',
+  DJI: '/logos/DJI.svg',
   Fujifilm: '/logos/Fujifilm.svg',
+  Google: '/logos/Google.svg',
+  GoPro: '/logos/Gopro.svg',
+  Hasselblad: '/logos/Hasselblad.svg',
+  Huawei: '/logos/Huawei.svg',
+  Laowa: '/logos/Laowa.svg',
   Leica: '/logos/Leica.svg',
+  Lumix: '/logos/Lumix.svg',
+  Minolta: '/logos/Minolta.svg',
+  Nikon: '/logos/Nikon.svg',
+  Olympus: '/logos/Olympus.svg',
+  Pentax: '/logos/Pentax.svg',
+  Ricoh: '/logos/Ricoh.svg',
+  Samsung: '/logos/Samsung.svg',
+  Samyang: '/logos/Samyang.png',
   Sigma: '/logos/Sigma.svg',
   Sony: '/logos/Sony.svg',
+  TTArtisan: '/logos/TTArtisan.svg',
+  Tamron: '/logos/Tamron.svg',
   Zeiss: '/logos/Zeiss.svg',
+  Xiaomi: '/logos/xiaomi.svg',
 };
 const LENS_OPTIONS = Object.keys(BRAND_LOGOS);
+const FILE_ACCEPT =
+  'image/*,.raw,.RAW,.arw,.ARW,.dng,.DNG,.nef,.NEF,.cr2,.CR2,.cr3,.CR3,.orf,.ORF,.raf,.RAF,.rw2,.RW2,.pef,.PEF,.heic,.HEIC,.heif,.HEIF';
+const RAW_EXTENSIONS = new Set([
+  'raw',
+  'arw',
+  'dng',
+  'nef',
+  'cr2',
+  'cr3',
+  'orf',
+  'raf',
+  'rw2',
+  'pef',
+]);
+const IMAGE_EXTENSIONS = new Set([
+  'jpg',
+  'jpeg',
+  'png',
+  'gif',
+  'webp',
+  'bmp',
+  'tif',
+  'tiff',
+  'heic',
+  'heif',
+]);
+const EXIFR_OPTIONS = {
+  tiff: true,
+  ifd0: true,
+  exif: true,
+};
 
 function detectBrand(input) {
   const text = normalizeString(input);
@@ -126,6 +191,185 @@ function resolveLensState(lensText) {
     return { lensChoice: detected, lensCustom: '' };
   }
   return { lensChoice: 'other', lensCustom: normalized };
+}
+
+function normalizeExifTags(exif) {
+  if (!exif) {
+    return {};
+  }
+  return {
+    Make: exif.Make ?? exif.make ?? exif.camera_make ?? exif.cameraMake ?? '',
+    Model: exif.Model ?? exif.model ?? exif.camera_model ?? exif.cameraModel ?? '',
+    LensModel:
+      exif.LensModel ??
+      exif.Lens ??
+      exif.lens ??
+      exif.lens_model ??
+      exif.lensModel ??
+      exif.LensID ??
+      '',
+    LensMake: exif.LensMake ?? exif.lens_make ?? exif.lensMake ?? '',
+    ISOSpeedRatings:
+      exif.ISOSpeedRatings ??
+      exif.ISO ??
+      exif.ISOValue ??
+      exif.ISOSpeed ??
+      exif.iso_speed ??
+      exif.iso ??
+      '',
+    PhotographicSensitivity: exif.PhotographicSensitivity ?? '',
+    FNumber:
+      exif.FNumber ??
+      exif.ApertureValue ??
+      exif.Aperture ??
+      exif.aperture ??
+      exif.aperture_value ??
+      '',
+    ExposureTime:
+      exif.ExposureTime ??
+      exif.ShutterSpeedValue ??
+      exif.ShutterSpeed ??
+      exif.shutter ??
+      exif.shutter_speed ??
+      exif.exposure_time ??
+      '',
+    FocalLength:
+      exif.FocalLength ??
+      exif.FocalLengthIn35mmFormat ??
+      exif.FocalLengthIn35mmFilm ??
+      exif.focal_len ??
+      exif.focal_length ??
+      '',
+  };
+}
+
+function loadImageFromUrl(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('Image failed to load'));
+    img.src = url;
+  });
+}
+
+function getMetadataDimensions(meta) {
+  const pairs = [
+    [meta?.width, meta?.height],
+    [meta?.image_width, meta?.image_height],
+    [meta?.imageWidth, meta?.imageHeight],
+    [meta?.sizes?.width, meta?.sizes?.height],
+    [meta?.sizes?.iwidth, meta?.sizes?.iheight],
+    [meta?.sizes?.raw_width, meta?.sizes?.raw_height],
+    [meta?.raw_width, meta?.raw_height],
+    [meta?.rawWidth, meta?.rawHeight],
+  ];
+  for (const [width, height] of pairs) {
+    const safeWidth = Number(width);
+    const safeHeight = Number(height);
+    if (safeWidth > 0 && safeHeight > 0) {
+      return { width: safeWidth, height: safeHeight };
+    }
+  }
+  return { width: 0, height: 0 };
+}
+
+function normalizeRawImageData(decoded, meta) {
+  if (!decoded) {
+    return null;
+  }
+  let data =
+    decoded.data ??
+    decoded.pixels ??
+    decoded.imageData ??
+    decoded.image ??
+    decoded;
+  if (data?.data) {
+    data = data.data;
+  }
+  if (data instanceof ArrayBuffer) {
+    data = new Uint8Array(data);
+  }
+  if (Array.isArray(data)) {
+    data = Uint8Array.from(data);
+  }
+  const width =
+    decoded.width ?? decoded.imageWidth ?? decoded.w ?? decoded.cols ?? null;
+  const height =
+    decoded.height ?? decoded.imageHeight ?? decoded.h ?? decoded.rows ?? null;
+  const metaDimensions = getMetadataDimensions(meta);
+  const finalWidth = Number(width) || metaDimensions.width;
+  const finalHeight = Number(height) || metaDimensions.height;
+  if (!data || !finalWidth || !finalHeight) {
+    return null;
+  }
+  return {
+    data,
+    width: finalWidth,
+    height: finalHeight,
+  };
+}
+
+function buildRgbaBuffer(data, width, height) {
+  const pixelCount = width * height;
+  if (!pixelCount || !data) {
+    return null;
+  }
+  const rgba = new Uint8ClampedArray(pixelCount * 4);
+  if (data.length >= pixelCount * 4) {
+    rgba.set(data.subarray(0, pixelCount * 4));
+    return rgba;
+  }
+  if (data.length >= pixelCount * 3) {
+    for (let i = 0; i < pixelCount; i += 1) {
+      const dataIndex = i * 3;
+      const rgbaIndex = i * 4;
+      rgba[rgbaIndex] = data[dataIndex];
+      rgba[rgbaIndex + 1] = data[dataIndex + 1];
+      rgba[rgbaIndex + 2] = data[dataIndex + 2];
+      rgba[rgbaIndex + 3] = 255;
+    }
+    return rgba;
+  }
+  return null;
+}
+
+async function decodeRawFile(file) {
+  const buffer = new Uint8Array(await file.arrayBuffer());
+  const raw = new LibRaw();
+  await raw.open(buffer, {
+    outputBps: 8,
+    outputColor: 1,
+    useCameraWb: true,
+    noAutoBright: true,
+  });
+  const metadata = await raw.metadata(true);
+  const decoded = await raw.imageData();
+  const normalized = normalizeRawImageData(decoded, metadata);
+  const exif = normalizeExifTags(metadata);
+  if (!normalized) {
+    return { image: null, previewUrl: '', exif };
+  }
+  const rgba = buildRgbaBuffer(normalized.data, normalized.width, normalized.height);
+  if (!rgba) {
+    return { image: null, previewUrl: '', exif };
+  }
+  const canvas = document.createElement('canvas');
+  canvas.width = normalized.width;
+  canvas.height = normalized.height;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) {
+    return { image: null, previewUrl: '', exif };
+  }
+  ctx.putImageData(new ImageData(rgba, normalized.width, normalized.height), 0, 0);
+  const blob = await new Promise((resolve) =>
+    canvas.toBlob(resolve, 'image/jpeg', 0.92)
+  );
+  if (!blob) {
+    return { image: null, previewUrl: '', exif };
+  }
+  const previewUrl = URL.createObjectURL(blob);
+  const image = await loadImageFromUrl(previewUrl);
+  return { image, previewUrl, exif };
 }
 
 function formatNumber(value) {
@@ -456,18 +700,18 @@ function drawPortrait(ctx, imageInfo, layout, displayData, brandLogo, lensLogo) 
   const { height } = imageInfo;
   const { canvasWidth, panelSize } = layout;
   const panelTop = height;
-  const panelPadding = panelSize * 0.12;
-  const footerPadding = panelSize * 0.18;
+  const panelPadding = Math.round(panelSize * 0.12);
+  const footerPadding = Math.round(panelSize * 0.18);
   const scale = panelSize / 238;
-  const infoGap = 27 * scale;
-  const infoSpacing = 123 * scale;
-  const numberSize = 36 * scale;
-  const labelSize = 13 * scale;
-  const labelGap = 8 * scale;
-  const infoToFooterGap = 103 * scale;
-  const cameraSize = 16 * scale;
-  const brandSize = 18 * scale;
-  const brandGap = 12 * scale;
+  const infoGap = Math.round(27 * scale);
+  const infoSpacing = Math.round(123 * scale);
+  const numberSize = Math.round(36 * scale);
+  const labelSize = Math.round(13 * scale);
+  const labelGap = Math.round(8 * scale);
+  const infoToFooterGap = Math.round(103 * scale);
+  const cameraSize = Math.round(16 * scale);
+  const brandSize = Math.round(18 * scale);
+  const brandGap = Math.round(12 * scale);
 
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, panelTop, canvasWidth, panelSize);
@@ -481,9 +725,9 @@ function drawPortrait(ctx, imageInfo, layout, displayData, brandLogo, lensLogo) 
     statWidths.reduce((sum, value) => sum + value, 0) +
     infoSpacing * (stats.length - 1);
   let currentX = (canvasWidth - totalWidth) / 2;
-  const statsTop = panelTop + infoGap;
-  const numberBaseline = statsTop + numberSize;
-  const labelBaseline = numberBaseline + labelGap + labelSize;
+  const statsTop = Math.round(panelTop + infoGap);
+  const numberBaseline = Math.round(statsTop + numberSize);
+  const labelBaseline = Math.round(numberBaseline + labelGap + labelSize);
 
   stats.forEach((stat, index) => {
     const statWidth = statWidths[index];
@@ -499,7 +743,7 @@ function drawPortrait(ctx, imageInfo, layout, displayData, brandLogo, lensLogo) 
     currentX += statWidth + infoSpacing;
   });
 
-  const footerY = labelBaseline + infoToFooterGap;
+  const footerY = Math.round(labelBaseline + infoToFooterGap);
   ctx.textAlign = 'left';
   drawFittedText(
     ctx,
@@ -530,19 +774,19 @@ function drawLandscape(ctx, imageInfo, layout, displayData, brandLogo, lensLogo)
   const { width, height } = imageInfo;
   const { panelSize } = layout;
   const panelLeft = width;
-  const panelPadding = panelSize * 0.12;
-  const footerPadding = panelSize * 0.18;
+  const panelPadding = Math.round(panelSize * 0.12);
+  const footerPadding = Math.round(panelSize * 0.18);
   const scale = panelSize / 238;
-  const infoTop = 125 * scale;
-  const infoSpacing = 123 * scale;
-  const infoToFooterGap = 211 * scale;
-  const nameToBrandGap = 32 * scale;
-  const numberSize = 36 * scale;
-  const labelSize = 13 * scale;
-  const labelGap = 8 * scale;
-  const cameraSize = 16 * scale;
-  const brandSize = 18 * scale;
-  const lensLineGap = 14 * scale;
+  const infoTop = Math.round(125 * scale);
+  const infoSpacing = Math.round(123 * scale);
+  const infoToFooterGap = Math.round(211 * scale);
+  const nameToBrandGap = Math.round(32 * scale);
+  const numberSize = Math.round(36 * scale);
+  const labelSize = Math.round(13 * scale);
+  const labelGap = Math.round(8 * scale);
+  const cameraSize = Math.round(16 * scale);
+  const brandSize = Math.round(18 * scale);
+  const lensLineGap = Math.round(14 * scale);
 
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(panelLeft, 0, panelSize, height);
@@ -552,9 +796,11 @@ function drawLandscape(ctx, imageInfo, layout, displayData, brandLogo, lensLogo)
   const labelBaselineOffset = labelGap + labelSize;
 
   stats.forEach((stat, index) => {
-    const numberBaseline = infoTop + numberSize + index * infoSpacing;
-    const labelBaseline = numberBaseline + labelBaselineOffset;
-    const textX = panelLeft + panelPadding;
+    const numberBaseline = Math.round(
+      infoTop + numberSize + index * infoSpacing
+    );
+    const labelBaseline = Math.round(numberBaseline + labelBaselineOffset);
+    const textX = Math.round(panelLeft + panelPadding);
     ctx.textAlign = 'left';
     ctx.textBaseline = 'alphabetic';
     ctx.font = `500 ${numberSize}px ${FONT_FAMILY}`;
@@ -565,26 +811,27 @@ function drawLandscape(ctx, imageInfo, layout, displayData, brandLogo, lensLogo)
     ctx.fillStyle = TEXT_COLOR;
   });
 
-  const lastLabelBaseline =
+  const lastLabelBaseline = Math.round(
     infoTop +
-    numberSize +
-    (stats.length - 1) * infoSpacing +
-    labelBaselineOffset;
-  const cameraBaseline = lastLabelBaseline + infoToFooterGap;
-  const brandBaseline = cameraBaseline + nameToBrandGap + brandSize;
+      numberSize +
+      (stats.length - 1) * infoSpacing +
+      labelBaselineOffset
+  );
+  const cameraBaseline = Math.round(lastLabelBaseline + infoToFooterGap);
+  const brandBaseline = Math.round(cameraBaseline + nameToBrandGap + brandSize);
   ctx.textAlign = 'left';
   drawFittedText(
     ctx,
     displayData.cameraName,
-    panelLeft + footerPadding,
+    Math.round(panelLeft + footerPadding),
     cameraBaseline,
-    panelSize - footerPadding * 2,
+    Math.round(panelSize - footerPadding * 2),
     cameraSize,
     200
   );
   drawBrandLensStack({
     ctx,
-    x: panelLeft + footerPadding,
+    x: Math.round(panelLeft + footerPadding),
     y: brandBaseline,
     brandText: displayData.brandText,
     lensText: displayData.lensText,
@@ -719,37 +966,86 @@ function App() {
       return;
     }
 
-    setStatus('Loading image and metadata...');
+    const extension = file.name.split('.').pop()?.toLowerCase() || '';
+    const isRaw = RAW_EXTENSIONS.has(extension);
+    const isImage =
+      !isRaw &&
+      (file.type.startsWith('image/') || IMAGE_EXTENSIONS.has(extension));
+    setStatus(
+      isRaw
+        ? 'Decoding RAW in the browser. This can take a moment...'
+        : isImage
+          ? 'Loading image and metadata...'
+          : 'Loading file metadata...'
+    );
     setFileName(file.name);
-    const objectUrl = URL.createObjectURL(file);
-    setImageUrl(objectUrl);
+    setImageUrl('');
 
+    let previewUrl = '';
     try {
-      const [buffer, image] = await Promise.all([
-        file.arrayBuffer(),
-        new Promise((resolve, reject) => {
-          const img = new Image();
-          img.onload = () => resolve(img);
-          img.onerror = () => reject(new Error('Image failed to load'));
-          img.src = objectUrl;
-        }),
-      ]);
+      let exif = {};
+      let image = null;
 
-      imageRef.current = image;
-      const orientation = image.width >= image.height ? 'landscape' : 'portrait';
-      setImageInfo({ width: image.width, height: image.height });
-
-      const exif = parseExif(buffer);
+      if (isRaw) {
+        const decoded = await decodeRawFile(file);
+        exif = decoded.exif;
+        image = decoded.image;
+        previewUrl = decoded.previewUrl;
+      } else {
+        const parsed = await exifr.parse(file, EXIFR_OPTIONS).catch(() => null);
+        if (parsed) {
+          exif = normalizeExifTags(parsed);
+        } else {
+          const buffer = await file.arrayBuffer();
+          exif = normalizeExifTags(parseExif(buffer));
+        }
+        if (isImage) {
+          previewUrl = URL.createObjectURL(file);
+          image = await loadImageFromUrl(previewUrl);
+        }
+      }
+      const orientation = form.orientation || 'portrait';
       const derived = buildFormFromExif(exif, orientation);
+
+      if (image) {
+        imageRef.current = image;
+        setImageInfo({ width: image.width, height: image.height });
+        setImageUrl(previewUrl);
+      } else {
+        imageRef.current = null;
+        setImageInfo({ width: 0, height: 0 });
+        setImageUrl('');
+      }
       setAutoForm(derived);
       setForm(derived);
+      const hasExif = Object.keys(exif).length > 0;
+      if (isRaw) {
+        setStatus(
+          hasExif
+            ? image
+              ? 'RAW decoded at full resolution. Update fields if needed.'
+              : 'RAW metadata pulled, but decode failed. Try a JPG/PNG.'
+            : 'RAW metadata not found. Try a JPG/PNG.'
+        );
+        return;
+      }
       setStatus(
-        Object.keys(exif).length
-          ? 'Metadata pulled from EXIF. Update the fields if needed.'
-          : 'No EXIF metadata found. Fill the fields manually.'
+        hasExif
+          ? image
+            ? 'Metadata pulled from EXIF. Update the fields if needed.'
+            : 'Metadata pulled from EXIF. Preview not available for this file type.'
+          : image
+            ? 'No EXIF metadata found. Fill the fields manually.'
+            : 'No EXIF metadata found. Preview not available for this file type.'
       );
     } catch (error) {
-      setStatus('Could not load the image. Please try another file.');
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+      imageRef.current = null;
+      setImageInfo({ width: 0, height: 0 });
+      setImageUrl('');
+      setStatus('Could not load the file. Please try another format.');
     }
   };
 
@@ -836,7 +1132,7 @@ function App() {
               <input
                 id="photo-upload"
                 type="file"
-                accept="image/*"
+                accept={FILE_ACCEPT}
                 onChange={handleFileChange}
               />
               <span className="file-drop__title">
