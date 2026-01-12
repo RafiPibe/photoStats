@@ -10,6 +10,7 @@
 
 # production
 /build
+SKILLS.md
 
 # misc
 .DS_Store

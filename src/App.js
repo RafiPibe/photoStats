@@ -1,8 +1,11 @@
-import './App.css';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import * as exifr from 'exifr';
 import LibRaw from 'libraw-wasm';
 import { normalizeString, parseExif, toNumber } from './utils/exif';
+import Hero from './components/Hero';
+import FileUpload from './components/FileUpload';
+import PhotoForm from './components/PhotoForm';
+import Preview from './components/Preview';
 
 const DEFAULT_FORM = {
   cameraName: '',
@@ -813,9 +816,9 @@ function drawLandscape(ctx, imageInfo, layout, displayData, brandLogo, lensLogo)
 
   const lastLabelBaseline = Math.round(
     infoTop +
-      numberSize +
-      (stats.length - 1) * infoSpacing +
-      labelBaselineOffset
+    numberSize +
+    (stats.length - 1) * infoSpacing +
+    labelBaselineOffset
   );
   const cameraBaseline = Math.round(lastLabelBaseline + infoToFooterGap);
   const brandBaseline = Math.round(cameraBaseline + nameToBrandGap + brandSize);
@@ -1049,36 +1052,6 @@ function App() {
     }
   };
 
-  const handleChange = (field) => (event) => {
-    setForm((prev) => ({ ...prev, [field]: event.target.value }));
-  };
-
-  const handleBrandChoice = (event) => {
-    const value = event.target.value;
-    setForm((prev) => ({
-      ...prev,
-      brandChoice: value,
-      brandCustom: value === 'other' ? prev.brandCustom : '',
-    }));
-  };
-
-  const handleBrandCustom = (event) => {
-    setForm((prev) => ({ ...prev, brandCustom: event.target.value }));
-  };
-
-  const handleLensChoice = (event) => {
-    const value = event.target.value;
-    setForm((prev) => ({
-      ...prev,
-      lensChoice: value,
-      lensCustom: value === 'other' ? prev.lensCustom : '',
-    }));
-  };
-
-  const handleLensCustom = (event) => {
-    setForm((prev) => ({ ...prev, lensCustom: event.target.value }));
-  };
-
   const handleReset = () => {
     setForm(autoForm);
   };
@@ -1095,202 +1068,93 @@ function App() {
   };
 
   return (
-    <div className="app">
-      <header className="hero">
-        <div>
-          <p className="eyebrow">PhotoStats Studio</p>
-          <h1>Turn EXIF metadata into a clean, shareable frame.</h1>
-          <p className="hero__lead">
-            Upload a photo, auto-fill the stats, and export a polished PNG with
-            camera branding and lens info.
-          </p>
-        </div>
-        <div className="hero__actions">
+    <>
+      <Hero />
+
+      <main id="upload" className="relative px-6 py-20 max-w-7xl mx-auto">
+        {/* Action Buttons */}
+        <div className="flex flex-wrap gap-3 justify-center mb-12">
           <button
-            className="button button--primary"
             onClick={handleDownload}
             disabled={!imageUrl}
+            className="inline-flex items-center justify-center px-8 py-3 rounded-full bg-dark text-white font-semibold shadow-lg hover:shadow-xl transition-shadow duration-200 disabled:opacity-60 disabled:cursor-not-allowed disabled:shadow-none"
             type="button"
+            aria-label="Download PNG of photo with EXIF overlay"
           >
             Download PNG
           </button>
           <button
-            className="button button--ghost"
             onClick={handleReset}
             disabled={!imageUrl}
+            className="inline-flex items-center justify-center px-8 py-3 rounded-full bg-white text-dark font-semibold border border-cream-300 hover:border-cream-400 transition-colors duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
             type="button"
+            aria-label="Reset form to original EXIF data"
           >
             Reset to EXIF
           </button>
         </div>
-      </header>
 
-      <main className="layout">
-        <section className="panel">
-          <div className="upload-card">
-            <label className="file-drop" htmlFor="photo-upload">
-              <input
-                id="photo-upload"
-                type="file"
-                accept={FILE_ACCEPT}
-                onChange={handleFileChange}
-              />
-              <span className="file-drop__title">
-                {imageUrl ? 'Swap photo' : 'Drop a photo here'}
-              </span>
-              <span className="file-drop__subtitle">
-                JPG works best for full EXIF metadata.
-              </span>
-            </label>
-            {imageUrl ? (
-              <div className="thumb">
-                <img src={imageUrl} alt="Uploaded preview" />
+        {/* Main Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-8">
+          {/* Left Panel - Scrollable Content */}
+          <div className="flex flex-col gap-6">
+            <FileUpload
+              onFileChange={handleFileChange}
+              accept={FILE_ACCEPT}
+              currentFile={fileName ? { name: fileName } : null}
+            />
+
+            {imageUrl && (
+              <div className="rounded-3xl overflow-hidden border border-cream-300 bg-cream-50 min-h-[200px] flex items-center justify-center">
+                <img src={imageUrl} alt="Uploaded preview" className="w-full h-full object-cover" />
               </div>
-            ) : (
-              <div className="thumb thumb--empty">No image loaded</div>
             )}
-            <div className="status-pill">{status}</div>
-          </div>
 
-          <form className="meta-form">
-            <div className="field field--red">
-              <label htmlFor="cameraName">Camera name</label>
-              <input
-                id="cameraName"
-                type="text"
-                placeholder="Sony ILCE-7RM2"
-                value={form.cameraName}
-                onChange={handleChange('cameraName')}
-              />
-            </div>
-            <div className="field field--orange">
-              <label htmlFor="brand">Brand</label>
-              <select
-                id="brand"
-                value={form.brandChoice}
-                onChange={handleBrandChoice}
-              >
-                <option value="none">None</option>
-                {BRAND_OPTIONS.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-                <option value="other">Other</option>
-              </select>
-              {form.brandChoice === 'other' && (
-                <input
-                  type="text"
-                  placeholder="Custom brand"
-                  value={form.brandCustom}
-                  onChange={handleBrandCustom}
-                />
-              )}
-            </div>
-            <div className="field field--green">
-              <label htmlFor="lens">Lens used</label>
-              <select id="lens" value={form.lensChoice} onChange={handleLensChoice}>
-                <option value="">None</option>
-                {LENS_OPTIONS.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-                <option value="other">Other</option>
-              </select>
-              {form.lensChoice === 'other' && (
-                <input
-                  type="text"
-                  placeholder="Custom lens"
-                  value={form.lensCustom}
-                  onChange={handleLensCustom}
-                />
-              )}
-            </div>
-            <div className="field field--darkgreen">
-              <label htmlFor="aperture">f</label>
-              <input
-                id="aperture"
-                type="text"
-                placeholder="4"
-                value={form.aperture}
-                onChange={handleChange('aperture')}
-              />
-            </div>
-            <div className="field field--blue">
-              <label htmlFor="shutterSpeed">Shutter speed</label>
-              <input
-                id="shutterSpeed"
-                type="text"
-                placeholder="1/125"
-                value={form.shutterSpeed}
-                onChange={handleChange('shutterSpeed')}
-              />
-            </div>
-            <div className="field field--purple">
-              <label htmlFor="focalLength">mm</label>
-              <input
-                id="focalLength"
-                type="text"
-                placeholder="46.1"
-                value={form.focalLength}
-                onChange={handleChange('focalLength')}
-              />
-            </div>
-            <div className="field field--pink">
-              <label htmlFor="iso">ISO</label>
-              <input
-                id="iso"
-                type="text"
-                placeholder="1000"
-                value={form.iso}
-                onChange={handleChange('iso')}
-              />
-            </div>
-            <div className="field field--neutral">
-              <label htmlFor="orientation">Orientation</label>
-              <select
-                id="orientation"
-                value={form.orientation}
-                onChange={handleChange('orientation')}
-              >
-                <option value="portrait">Portrait</option>
-                <option value="landscape">Landscape</option>
-              </select>
-            </div>
-          </form>
-          <p className="form-note">
-            Logo assets live in <span>public/logos</span> and auto-appear when the
-            brand matches.
-          </p>
-        </section>
-
-        <section className="panel">
-          <div className="preview-card">
-            <div className="preview-header">
-              <div>
-                <p className="preview-title">Output preview</p>
-                <p className="preview-subtitle">
-                  {layout
-                    ? `${layout.canvasWidth} x ${layout.canvasHeight}px`
-                    : 'Waiting for image'}
-                </p>
+            {!imageUrl && (
+              <div className="rounded-3xl border border-cream-300 bg-cream-50 min-h-[200px] flex items-center justify-center text-cream-700 text-sm">
+                No image loaded
               </div>
-              <div className="preview-badge">Plus Jakarta Sans</div>
+            )}
+
+            <div className="self-start px-4 py-2 rounded-full bg-cream-200 text-sm text-cream-800">
+              {status}
             </div>
-            <div className="canvas-shell">
-              {imageUrl ? (
-                <canvas ref={canvasRef} />
-              ) : (
-                <div className="canvas-placeholder">
-                  Upload a photo to see the final frame.
-                </div>
-              )}
-            </div>
+
+            <PhotoForm
+              form={form}
+              onChange={(field, value) => setForm(prev => ({ ...prev, [field]: value }))}
+              onBrandChange={(e) => {
+                const value = e.target.value;
+                setForm(prev => ({
+                  ...prev,
+                  brandChoice: value,
+                  brandCustom: value === 'other' ? prev.brandCustom : '',
+                }));
+              }}
+              onBrandCustomChange={(e) => setForm(prev => ({ ...prev, brandCustom: e.target.value }))}
+              onLensChange={(e) => {
+                const value = e.target.value;
+                setForm(prev => ({
+                  ...prev,
+                  lensChoice: value,
+                  lensCustom: value === 'other' ? prev.lensCustom : '',
+                }));
+              }}
+              onLensCustomChange={(e) => setForm(prev => ({ ...prev, lensCustom: e.target.value }))}
+            />
           </div>
-        </section>
+
+          {/* Right Panel - Sticky Preview Only */}
+          <div className="lg:sticky lg:top-6 lg:self-start h-fit">
+            <Preview
+              canvasRef={canvasRef}
+              imageUrl={imageUrl}
+              layout={layout}
+            />
+          </div>
+        </div>
       </main>
-    </div>
+    </>
   );
 }
 
