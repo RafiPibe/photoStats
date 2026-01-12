@@ -1061,11 +1061,34 @@ function App() {
     if (!canvasRef.current) {
       return;
     }
-    const link = document.createElement('a');
+
     const safeName = fileName ? fileName.replace(/\.[^/.]+$/, '') : 'photo';
-    link.download = `${safeName}-photostats.png`;
-    link.href = canvasRef.current.toDataURL('image/png');
-    link.click();
+    const downloadFileName = `${safeName}-photostats.png`;
+
+    // Try blob method first (better mobile support)
+    canvasRef.current.toBlob((blob) => {
+      if (blob) {
+        // Create blob URL
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.download = downloadFileName;
+        link.href = url;
+
+        // Trigger download
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // Clean up blob URL
+        setTimeout(() => URL.revokeObjectURL(url), 100);
+      } else {
+        // Fallback to data URL method
+        const link = document.createElement('a');
+        link.download = downloadFileName;
+        link.href = canvasRef.current.toDataURL('image/png');
+        link.click();
+      }
+    }, 'image/png');
   };
 
   return (
@@ -1151,6 +1174,8 @@ function App() {
               canvasRef={canvasRef}
               imageUrl={imageUrl}
               layout={layout}
+              onDownload={handleDownload}
+              fileName={fileName}
             />
           </div>
         </div>
