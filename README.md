@@ -12,6 +12,7 @@ PhotoStats is a web application that automatically extracts EXIF metadata from y
 
 ## Example Image Result
 ![PhotoStats Example](/src/example.png)
+*image is compressed for this example but it supports full coverage of the uploaded image*
 
 ## Features
 
