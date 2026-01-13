@@ -4,7 +4,7 @@ const BRAND_OPTIONS = [
     'Apple', 'Sony', 'Canon', 'Nikon', 'Fujifilm', 'Leica', 'Lumix', 'Sigma',
     'Zeiss', 'Olympus', 'Pentax', 'Ricoh', 'Hasselblad', 'DJI', 'GoPro',
     'Google', 'Samsung', 'Xiaomi', 'Huawei', 'Minolta', 'Tamron', 'Laowa',
-    'Samyang', 'TTArtisan', '7Artisans'
+    'Samyang', 'TTArtisan', '7Artisans', 'Viltrox'
 ];
 
 const LENS_OPTIONS = BRAND_OPTIONS;
