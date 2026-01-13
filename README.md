@@ -57,7 +57,7 @@ The app will open at [http://localhost:3000](http://localhost:3000)
 4. **Choose Orientation** - Select portrait or landscape layout
 5. **Download** - Click "Download PNG" to save your image with the EXIF overlay
 
-## Supported Camera Brands
+## Supported Camera / Lens Brands
 
 PhotoStats includes logo assets for the following brands:
 
@@ -86,6 +86,9 @@ PhotoStats includes logo assets for the following brands:
 - TTArtisan
 - Zeiss
 - Xiaomi
+- Viltrox
+
+*If the brand is not in this list, you can input your own*
 
 ## Project Structure
 

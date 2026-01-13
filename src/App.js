@@ -47,6 +47,7 @@ const BRAND_MATCHERS = [
   { pattern: /samyang/i, label: 'Samyang' },
   { pattern: /ttartisan/i, label: 'TTArtisan' },
   { pattern: /7artisans?/i, label: '7Artisans' },
+  { pattern: /viltrox/i, label: 'Viltrox' },
 ];
 
 const FONT_FAMILY = '"Plus Jakarta Sans", sans-serif';
@@ -89,6 +90,7 @@ const BRAND_LOGOS = {
   Tamron: '/logos/Tamron.svg',
   Zeiss: '/logos/Zeiss.svg',
   Xiaomi: '/logos/xiaomi.svg',
+  Viltrox: '/logos/viltrox.svg',
 };
 const LENS_OPTIONS = Object.keys(BRAND_LOGOS);
 const FILE_ACCEPT =
