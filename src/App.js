@@ -1171,6 +1171,8 @@ function App() {
 
             <PhotoForm
               form={form}
+              brandOptions={BRAND_OPTIONS}
+              lensOptions={LENS_OPTIONS}
               onChange={(field, value) => setForm(prev => ({ ...prev, [field]: value }))}
               onBrandChange={(e) => {
                 const value = e.target.value;

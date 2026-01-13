@@ -1,14 +1,5 @@
 import { cn } from '../utils/cn';
 
-const BRAND_OPTIONS = [
-    'Apple', 'Sony', 'Canon', 'Nikon', 'Fujifilm', 'Leica', 'Lumix', 'Sigma',
-    'Zeiss', 'Olympus', 'Pentax', 'Ricoh', 'Hasselblad', 'DJI', 'GoPro',
-    'Google', 'Samsung', 'Xiaomi', 'Huawei', 'Minolta', 'Tamron', 'Laowa',
-    'Samyang', 'TTArtisan', '7Artisans', 'Viltrox'
-];
-
-const LENS_OPTIONS = BRAND_OPTIONS;
-
 const FIELD_COLORS = [
     'border-l-red-500',
     'border-l-orange-500',
@@ -20,7 +11,16 @@ const FIELD_COLORS = [
     'border-l-gray-500',
 ];
 
-export default function PhotoForm({ form, onChange, onBrandChange, onBrandCustomChange, onLensChange, onLensCustomChange }) {
+export default function PhotoForm({
+    form,
+    brandOptions = [],
+    lensOptions = [],
+    onChange,
+    onBrandChange,
+    onBrandCustomChange,
+    onLensChange,
+    onLensCustomChange
+}) {
     const handleChange = (field) => (e) => onChange(field, e.target.value);
 
     return (
@@ -55,7 +55,7 @@ export default function PhotoForm({ form, onChange, onBrandChange, onBrandCustom
                         className="border-none outline-none text-base bg-transparent font-semibold text-dark-100"
                     >
                         <option value="none">None</option>
-                        {BRAND_OPTIONS.map((option) => (
+                        {brandOptions.map((option) => (
                             <option key={option} value={option}>
                                 {option}
                             </option>
@@ -85,7 +85,7 @@ export default function PhotoForm({ form, onChange, onBrandChange, onBrandCustom
                         className="border-none outline-none text-base bg-transparent font-semibold text-dark-100"
                     >
                         <option value="">None</option>
-                        {LENS_OPTIONS.map((option) => (
+                        {lensOptions.map((option) => (
                             <option key={option} value={option}>
                                 {option}
                             </option>
