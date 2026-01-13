@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import * as exifr from 'exifr';
 import LibRaw from 'libraw-wasm';
+import { Analytics } from '@vercel/analytics/react';
 import { normalizeString, parseExif, toNumber } from './utils/exif';
 import Hero from './components/Hero';
 import FileUpload from './components/FileUpload';
@@ -1205,6 +1206,7 @@ function App() {
       </main>
 
       <Footer />
+      <Analytics />
     </>
   );
 }
