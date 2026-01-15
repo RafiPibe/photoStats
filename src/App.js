@@ -892,11 +892,16 @@ function App() {
     const detectedBrand = hasExplicitNone ? '' : detectBrand(form.cameraName);
     const brandKey = brandFromForm || detectedBrand || '';
     const brandDisplay = hasExplicitNone ? '' : brandKey || (lens ? '' : 'Brand');
+    
+    // If brand and lens are the same, only show brand (e.g. "Apple" instead of "Apple | Apple")
+    const finalLensText = brandDisplay && lens && 
+      brandDisplay.toLowerCase() === lens.toLowerCase() ? '' : lens;
+    
     return {
       cameraName,
       brandText: brandDisplay,
       brandKey,
-      lensText: lens,
+      lensText: finalLensText,
       stats: [
         { value: formatAperture(form.aperture), label: 'f' },
         { value: formatExposure(form.shutterSpeed) || '-', label: 'shutter speed' },
