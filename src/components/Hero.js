@@ -1,5 +1,6 @@
 import { motion, useScroll, useTransform } from 'motion/react';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
+import Tutorial from './Tutorial';
 
 // Array of logos with positions and parallax speeds
 const PARALLAX_LOGOS = [
@@ -43,63 +44,75 @@ function ParallaxLogo({ src, alt, x, y, speed, rotation }) {
 }
 
 export default function Hero() {
+    const [isTutorialOpen, setIsTutorialOpen] = useState(false);
+
     return (
-        <section className="relative min-h-dvh flex items-center justify-center overflow-hidden px-6 py-20">
-            {/* Parallax Logo Background */}
-            <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-                {PARALLAX_LOGOS.map((logo, index) => (
-                    <ParallaxLogo key={index} {...logo} />
-                ))}
-            </div>
+        <>
+            <section className="relative min-h-dvh flex items-center justify-center overflow-hidden px-6 py-20">
+                {/* Parallax Logo Background */}
+                <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+                    {PARALLAX_LOGOS.map((logo, index) => (
+                        <ParallaxLogo key={index} {...logo} />
+                    ))}
+                </div>
 
-            {/* Gradient Orbs */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
-                <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-gradient-to-br from-orange-200/30 to-transparent blur-3xl" />
-                <div className="absolute -bottom-40 -left-32 w-96 h-96 rounded-full bg-gradient-to-tr from-blue-200/30 to-transparent blur-3xl" />
-            </div>
+                {/* Gradient Orbs */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+                    <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-gradient-to-br from-orange-200/30 to-transparent blur-3xl" />
+                    <div className="absolute -bottom-40 -left-32 w-96 h-96 rounded-full bg-gradient-to-tr from-blue-200/30 to-transparent blur-3xl" />
+                </div>
 
-            {/* Hero Content */}
-            <div className="relative z-10 max-w-4xl mx-auto text-center">
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, ease: [0, 0, 0.2, 1] }}
-                >
-                    <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-bold text-dark mb-6 tracking-tight">
-                        Technical EXIF Data
-                        <br />
-                        <span className="text-dark-100">for Your Photos</span>
-                    </h1>
-                </motion.div>
-
-                <motion.p
-                    className="text-lg sm:text-xl text-cream-700 max-w-2xl mx-auto mb-12"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: 0.1, ease: [0, 0, 0.2, 1] }}
-                >
-                    Upload your photos and automatically extract camera, lens, and shooting data.
-                    Create stunning overlays with professional EXIF information in seconds.
-                </motion.p>
-
-                <motion.div
-                    className="flex flex-col sm:flex-row gap-4 justify-center items-center"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: 0.2, ease: [0, 0, 0.2, 1] }}
-                >
-                    <a
-                        href="#upload"
-                        onClick={(e) => {
-                            e.preventDefault();
-                            document.getElementById('upload')?.scrollIntoView({ behavior: 'smooth' });
-                        }}
-                        className="inline-flex items-center justify-center px-8 py-3 rounded-full bg-dark text-white font-semibold shadow-lg hover:shadow-xl transition-shadow duration-200"
+                {/* Hero Content */}
+                <div className="relative z-10 max-w-4xl mx-auto text-center">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, ease: [0, 0, 0.2, 1] }}
                     >
-                        Get Started
-                    </a>
-                </motion.div>
-            </div>
-        </section>
+                        <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-bold text-dark mb-6 tracking-tight">
+                            Technical EXIF Data
+                            <br />
+                            <span className="text-dark-100">for Your Photos</span>
+                        </h1>
+                    </motion.div>
+
+                    <motion.p
+                        className="text-lg sm:text-xl text-cream-700 max-w-2xl mx-auto mb-12"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.1, ease: [0, 0, 0.2, 1] }}
+                    >
+                        Upload your photos and automatically extract camera, lens, and shooting data.
+                        Create stunning overlays with professional EXIF information in seconds.
+                    </motion.p>
+
+                    <motion.div
+                        className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.2, ease: [0, 0, 0.2, 1] }}
+                    >
+                        <a
+                            href="#upload"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                document.getElementById('upload')?.scrollIntoView({ behavior: 'smooth' });
+                            }}
+                            className="inline-flex items-center justify-center px-8 py-3 rounded-full bg-dark text-white font-semibold shadow-lg hover:shadow-xl transition-shadow duration-200"
+                        >
+                            Get Started
+                        </a>
+                        <button
+                            onClick={() => setIsTutorialOpen(true)}
+                            className="inline-flex items-center justify-center px-8 py-3 rounded-full bg-white text-dark font-semibold border-2 border-dark hover:bg-cream-50 transition-colors duration-200"
+                        >
+                            Learn More
+                        </button>
+                    </motion.div>
+                </div>
+            </section>
+
+            <Tutorial isOpen={isTutorialOpen} onClose={() => setIsTutorialOpen(false)} />
+        </>
     );
 }

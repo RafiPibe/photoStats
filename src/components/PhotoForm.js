@@ -179,10 +179,6 @@ export default function PhotoForm({
                     </select>
                 </div>
             </div>
-
-            <p className="mt-4 text-sm text-cream-700">
-                Logo assets live in <span className="font-semibold">public/logos</span> and auto-appear when the brand matches.
-            </p>
         </div>
     );
 }
